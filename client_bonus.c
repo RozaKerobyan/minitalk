@@ -12,6 +12,8 @@
 
 #include "minitalk_bonus.h"
 
+static int	send_bit;
+
 int	ft_atoi(char *str)
 {
 	int	i;
@@ -39,6 +41,16 @@ int	ft_atoi(char *str)
 	return (result * sign);
 }
 
+static void     received_msg(int sig, siginfo_t *info, void *context)
+{
+        (void)info;
+        (void)context;
+        if (sig == SIGUSR1)
+                ft_printf("Message received ✅");
+        if (sig == SIGUSR2)
+                send_bit = 1;
+}
+
 void	send_to_msg(int pid, char c)
 {
 	int	i;
@@ -46,6 +58,7 @@ void	send_to_msg(int pid, char c)
 	i = 0;
 	while (i < 8)
 	{
+		send_bit = 0;
 		if (c & (0x01 << i))
 		{
 			kill(pid, SIGUSR1);
@@ -56,24 +69,26 @@ void	send_to_msg(int pid, char c)
 		}
 		usleep(100);
 		i++;
+		while (send_bit == 0)
+			pause();
 	}
-}
-
-void	received_msg(int sig)
-{
-	if (sig == SIGUSR2)
-		ft_printf("Message received ✅");
 }
 
 int	main(int argc, char *argv[])
 {
 	int	i;
 	int	pid;
+	struct sigaction	sa;
+
 
 	i = 0;
 	if (argc == 3)
 	{
-		signal(SIGUSR2, received_msg);
+		sa.sa_flags = SA_SIGINFO;
+                sa.sa_sigaction = received_msg;
+                sigemptyset(&sa.sa_mask);
+                sigaction(SIGUSR1, &sa, NULL);
+                sigaction(SIGUSR2, &sa, NULL);
 		pid = ft_atoi(argv[1]);
 		while (argv[2][i] != '\0')
 		{

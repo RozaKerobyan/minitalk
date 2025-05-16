@@ -14,19 +14,21 @@
 
 void	get_msg(int sig, siginfo_t *info, void *context)
 {
-	static int	i;
+	static unsigned char	i;
 	static int	bit;
 
 	(void)context;
 	if (sig == SIGUSR1)
-		i |= (0x01 << bit);
+		i |= (1 << bit);
+	else if (sig == SIGUSR2)
+		i &= ~(1 << bit);
 	bit++;
 	if (bit == 8)
 	{
 		if (i == '\0')
 		{
 			ft_printf("\n");
-			kill(info->si_pid, SIGUSR2);
+			kill(info->si_pid, SIGUSR1);
 		}
 		else
 		{
@@ -35,6 +37,7 @@ void	get_msg(int sig, siginfo_t *info, void *context)
 		bit = 0;
 		i = 0;
 	}
+	kill(info->si_pid, SIGUSR2);
 }
 
 int	main(int argc, char *argv[])
@@ -53,10 +56,10 @@ int	main(int argc, char *argv[])
 	}
 	pid = getpid();
 	ft_printf("Server PID ➡️  %d\n", pid);
-	while (argc == 1)
+	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGUSR2, &sa, NULL);
+	while (1)
 	{
-		sigaction(SIGUSR1, &sa, NULL);
-		sigaction(SIGUSR2, &sa, NULL);
 		pause();
 	}
 	return (0);
