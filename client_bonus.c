@@ -6,13 +6,13 @@
 /*   By: rkerobya <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/07 19:24:41 by rkerobya          #+#    #+#             */
-/*   Updated: 2025/05/09 18:27:33 by rkerobya         ###   ########.fr       */
+/*   Updated: 2025/05/17 20:07:22 by rkerobya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk_bonus.h"
 
-static int	send_bit;
+static int	g_send_bit;
 
 int	ft_atoi(char *str)
 {
@@ -41,14 +41,14 @@ int	ft_atoi(char *str)
 	return (result * sign);
 }
 
-static void     received_msg(int sig, siginfo_t *info, void *context)
+static void	received_msg(int sig, siginfo_t *info, void *context)
 {
-        (void)info;
-        (void)context;
-        if (sig == SIGUSR1)
-                ft_printf("Message received ✅");
-        if (sig == SIGUSR2)
-                send_bit = 1;
+	(void)info;
+	(void)context;
+	if (sig == SIGUSR1)
+		ft_printf("Message received ✅");
+	if (sig == SIGUSR2)
+		g_send_bit = 1;
 }
 
 void	send_to_msg(int pid, char c)
@@ -58,7 +58,7 @@ void	send_to_msg(int pid, char c)
 	i = 0;
 	while (i < 8)
 	{
-		send_bit = 0;
+		g_send_bit = 0;
 		if (c & (0x01 << i))
 		{
 			kill(pid, SIGUSR1);
@@ -69,39 +69,35 @@ void	send_to_msg(int pid, char c)
 		}
 		usleep(100);
 		i++;
-		while (send_bit == 0)
+		while (g_send_bit == 0)
 			pause();
 	}
 }
 
 int	main(int argc, char *argv[])
 {
-	int	i;
-	int	pid;
+	int					i;
+	int					pid;
 	struct sigaction	sa;
-
 
 	i = 0;
 	if (argc == 3)
 	{
 		sa.sa_flags = SA_SIGINFO;
-                sa.sa_sigaction = received_msg;
-                sigemptyset(&sa.sa_mask);
-                sigaction(SIGUSR1, &sa, NULL);
-                sigaction(SIGUSR2, &sa, NULL);
+		sa.sa_sigaction = received_msg;
+		sigemptyset(&sa.sa_mask);
+		sigaction(SIGUSR1, &sa, NULL);
+		sigaction(SIGUSR2, &sa, NULL);
 		pid = ft_atoi(argv[1]);
 		while (argv[2][i] != '\0')
 		{
-			send_to_msg(pid, argv[2][i]);
-			i++;
+			send_to_msg(pid, argv[2][i++]);
 		}
 		send_to_msg(pid, '\0');
 	}
 	else
 	{
-		ft_printf("⚠️  Oops! You need to enter two arguments. ⚠️  \n");
-		ft_printf("1️⃣  -> First: the PID number.\n");
-		ft_printf("2️⃣  -> Second: Enter text to send to the server.");
+		ft_printf("Missing arguments! Use: ./client [PID] [MESSAGE] ⚠️  \n");
 		return (1);
 	}
 	return (0);

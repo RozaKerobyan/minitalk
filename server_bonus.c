@@ -6,7 +6,7 @@
 /*   By: rkerobya <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/07 19:29:30 by rkerobya          #+#    #+#             */
-/*   Updated: 2025/05/09 18:45:50 by rkerobya         ###   ########.fr       */
+/*   Updated: 2025/05/17 16:34:29 by rkerobya         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 
 void	get_msg(int sig, siginfo_t *info, void *context)
 {
+	static int				bit;
 	static unsigned char	i;
-	static int	bit;
 
 	(void)context;
 	if (sig == SIGUSR1)
